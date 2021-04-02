@@ -17,9 +17,11 @@ import (
 )
 
 const (
-	labelManagedBy           = "managed-by"
-	keyManagedBy             = "calico-global-network-sync-operator"
-	labelRemoteClusterPrefix = "remote-cluster-prefix"
+	labelManagedBy         = "managed-by"
+	keyManagedBy           = "calico-global-network-sync-operator"
+	labelRemoteClusterName = "remote-cluster-name"
+	labelNetSetName        = "name"
+	labelNetSetNamespace   = "namespace"
 )
 
 var (
