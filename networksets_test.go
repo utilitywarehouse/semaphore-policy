@@ -10,7 +10,10 @@ import (
 
 func TestNetworkSets(t *testing.T) {
 	log.InitLogger("test", "debug")
-	netsSetStore := newNetworkSetStore("test")
+	netsSetStore := NetworkSetStore{
+		store:   make(map[string]*NetworkSet),
+		cluster: "test",
+	}
 	assert.Equal(t, "test", netsSetStore.cluster)
 
 	// Add a net to a set

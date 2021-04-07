@@ -15,24 +15,26 @@ import (
 )
 
 type Runner struct {
-	calicoClient   calicoClient.Interface
-	podWatcher     *kube.PodWatcher
-	nsStore        NetworkSetStore
-	prefix         string
-	nameAnnotation string
+	podWatcher            *kube.PodWatcher
+	nsStore               NetworkSetStore
+	nameAnnotation        string
+	canSync               bool
+	fullStoreResyncPeriod time.Duration
+	stop                  chan struct{}
 }
 
-func newRunner(client calicoClient.Interface, watchClient kubernetes.Interface, prefix, labelSelector, nameAnnotaion string, resyncPeriod time.Duration) *Runner {
+func newRunner(client calicoClient.Interface, watchClient kubernetes.Interface, cluster, labelSelector, nameAnnotaion string, fullStoreResyncPeriod, podResyncPeriod time.Duration) *Runner {
 	runner := &Runner{
-		calicoClient:   client,
-		prefix:         prefix,
-		nsStore:        newNetworkSetStore(prefix),
-		nameAnnotation: nameAnnotaion,
+		nsStore:               newNetworkSetStore(cluster, client),
+		nameAnnotation:        nameAnnotaion,
+		canSync:               false,
+		fullStoreResyncPeriod: fullStoreResyncPeriod,
+		stop:                  make(chan struct{}),
 	}
 
 	podWatcher := kube.NewPodWatcher(
 		watchClient,
-		resyncPeriod,
+		podResyncPeriod,
 		runner.PodEventHandler,
 		labelSelector,
 	)
@@ -42,19 +44,41 @@ func newRunner(client calicoClient.Interface, watchClient kubernetes.Interface, 
 	return runner
 }
 
-func (r *Runner) Run() error {
+func (r *Runner) Start() error {
 	go r.podWatcher.Run()
+	go r.nsStore.RunSyncLoop()
 	// wait for node watcher to sync. TODO: atm dummy and could run forever
 	// if node cache fails to sync
 	stopCh := make(chan struct{})
 	if ok := cache.WaitForNamedCacheSync("podWatcher", stopCh, r.podWatcher.HasSynced); !ok {
 		return fmt.Errorf("failed to wait for pods cache to sync")
 	}
+	r.canSync = true
+	r.nsStore.fullSyncQueue <- struct{}{}
 	return nil
+}
+
+func (r *Runner) Run() {
+	ticker := time.NewTicker(r.fullStoreResyncPeriod)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			r.nsStore.fullSyncQueue <- struct{}{}
+		case <-r.stop:
+			log.Logger.Debug("Stopping runner")
+			return
+		}
+	}
 }
 
 func (r *Runner) Healthy() bool {
 	return r.podWatcher.Healthy()
+}
+
+func (r *Runner) Stop() {
+	r.stop <- struct{}{}
+	r.nsStore.stop <- struct{}{}
 }
 
 func (r *Runner) PodEventHandler(eventType watch.EventType, old *v1.Pod, new *v1.Pod) {
@@ -84,9 +108,8 @@ func (r *Runner) onPodAdd(pod *v1.Pod) {
 	}
 	if pod.Status.PodIP != "" {
 		r.nsStore.AddNet(name, pod.Namespace, fmt.Sprintf("%s/32", pod.Status.PodIP))
-		if err := r.nsStore.SyncToCalico(r.calicoClient, name, pod.Namespace); err != nil {
-			log.Logger.Error("Cannot sync new pod to calico network set",
-				"err", err)
+		if r.canSync {
+			r.nsStore.EnqueueNetSetSync(name, pod.Namespace)
 		}
 	}
 }
@@ -110,9 +133,8 @@ func (r *Runner) onPodModify(old *v1.Pod, new *v1.Pod) {
 		altered = true
 	}
 	if altered {
-		if err := r.nsStore.SyncToCalico(r.calicoClient, name, new.Namespace); err != nil {
-			log.Logger.Error("Cannot sync pod modification to calico network set",
-				"err", err)
+		if r.canSync {
+			r.nsStore.EnqueueNetSetSync(name, new.Namespace)
 		}
 	}
 
@@ -126,9 +148,8 @@ func (r *Runner) onPodDelete(pod *v1.Pod) {
 	}
 	if pod.Status.PodIP != "" {
 		r.nsStore.DeleteNet(name, pod.Namespace, fmt.Sprintf("%s/32", pod.Status.PodIP))
-		if err := r.nsStore.SyncToCalico(r.calicoClient, name, pod.Namespace); err != nil {
-			log.Logger.Error("Cannot sync pod deletion to calico network set",
-				"err", err)
+		if r.canSync {
+			r.nsStore.EnqueueNetSetSync(name, pod.Namespace)
 		}
 	}
 }
