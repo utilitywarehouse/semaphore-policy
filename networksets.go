@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	calicoClient "github.com/projectcalico/libcalico-go/lib/clientv3"
 
@@ -14,15 +15,27 @@ type NetworkSet struct {
 	nets   []string
 }
 
-type NetworkSetStore struct {
-	store   map[string]*NetworkSet
-	cluster string // the name of the cluster that contains targets of this set
+type SyncObject struct {
+	id string
 }
 
-func newNetworkSetStore(cluster string) NetworkSetStore {
+type NetworkSetStore struct {
+	client        calicoClient.Interface
+	syncQueue     chan SyncObject
+	fullSyncQueue chan struct{}
+	stop          chan struct{}
+	store         map[string]*NetworkSet
+	cluster       string // the name of the cluster that contains targets of this set
+}
+
+func newNetworkSetStore(cluster string, client calicoClient.Interface) NetworkSetStore {
 	return NetworkSetStore{
-		store:   make(map[string]*NetworkSet),
-		cluster: cluster,
+		client:        client,
+		store:         make(map[string]*NetworkSet),
+		cluster:       cluster,
+		syncQueue:     make(chan SyncObject),
+		fullSyncQueue: make(chan struct{}),
+		stop:          make(chan struct{}),
 	}
 }
 
@@ -81,22 +94,94 @@ func (nss *NetworkSetStore) DeleteNet(name, namespace, net string) *NetworkSet {
 	return netset
 }
 
-func (nss *NetworkSetStore) SyncToCalico(client calicoClient.Interface, name, namespace string) error {
-	id := makeNetworkSetID(name, namespace, nss.cluster)
+func (nss *NetworkSetStore) syncToCalico(id string) error {
 	netset, ok := nss.store[id]
 	if !ok {
 		log.Logger.Info(
 			"Could not find network set in store, will try deleting from calico",
 			"resource", id)
-		return calico.DeleteGlobalNetworkSet(client, id)
+		return calico.DeleteGlobalNetworkSet(nss.client, id)
 	}
 	log.Logger.Info("Updating calico object", "resource", id, "nets", netset.nets)
 	return calico.CreateOrUpdateGlobalNetworkSet(
-		client,
+		nss.client,
 		id,
 		netset.labels,
 		netset.nets,
 	)
+}
+
+// RunSyncLoop is the main loop to handle sync signals for network sets and
+// full store syncs.
+func (nss *NetworkSetStore) RunSyncLoop() {
+	for {
+		select {
+		case o := <-nss.syncQueue:
+			if err := nss.syncToCalico(o.id); err != nil {
+				log.Logger.Error("failed to sync netset to calico GlobalNetworkSets", "id", o.id)
+				nss.requeue(o.id)
+			}
+		case <-nss.fullSyncQueue:
+			log.Logger.Debug("staring a new full sync loop")
+			currentNetSets, err := calico.GetGlobalNetworkSet(nss.client, map[string]string{
+				labelManagedBy:         keyManagedBy,
+				labelRemoteClusterName: nss.cluster,
+			})
+			if err != nil {
+				log.Logger.Error("failed get the list of existing network sets, potential stale set left behind!", "cluster", nss.cluster)
+			}
+			var currentNetSetsIDs []string
+			for _, n := range currentNetSets {
+				log.Logger.Debug("Found existing network set", "id", n.Name)
+				currentNetSetsIDs = append(currentNetSetsIDs, n.Name)
+			}
+			for id, _ := range nss.store {
+				if err := nss.syncToCalico(id); err != nil {
+					log.Logger.Error("failed to sync netset to calico GlobalNetworkSets", "id", id)
+					nss.requeue(id)
+				}
+				if i, found := inSlice(currentNetSetsIDs, id); found {
+					currentNetSetsIDs = removeFromSlice(currentNetSetsIDs, i)
+				}
+			}
+			// Sync should delete the calico GlocalNetworkSets that remained
+			// in the list
+			for _, id := range currentNetSetsIDs {
+				if err := nss.syncToCalico(id); err != nil {
+					log.Logger.Error("failed to sync netset to calico GlobalNetworkSets", "id", id)
+					nss.requeue(id)
+				}
+			}
+		case <-nss.stop:
+			log.Logger.Debug("Stopping network set store loop")
+			return
+		}
+	}
+}
+
+func (nss *NetworkSetStore) requeue(id string) {
+	log.Logger.Debug("Requeueing sync task", "id", id)
+	go func() {
+		time.Sleep(1)
+		nss.enqueue(id)
+	}()
+}
+
+// write to the sync queue or yield an error after 5 seconds and retry.
+func (nss *NetworkSetStore) enqueue(id string) {
+	select {
+	case nss.syncQueue <- SyncObject{id: id}:
+		log.Logger.Debug("Sync task queued", "id", id)
+	case <-time.After(5 * time.Second):
+		log.Logger.Error("Timed out trying to queue a sync action for netset, run queue is full", "id", id)
+		nss.requeue(id)
+	}
+}
+
+// EnqueueSync calculates the network set store id and adds to the sync queue
+func (nss *NetworkSetStore) EnqueueNetSetSync(name, namespace string) {
+	id := makeNetworkSetID(name, namespace, nss.cluster)
+	nss.enqueue(id)
 }
 
 // makeNetworkSetID returns the name of the respective calico GlobalNetworkSet

@@ -33,7 +33,8 @@ var (
 	flagRemoteAPIURL             = flag.String("remote-api-url", getEnv("REMOTE_API_URL", ""), "Remote Kubernetes API server URL")
 	flagRemoteCAURL              = flag.String("remote-ca-url", getEnv("REMOTE_CA_URL", ""), "Remote Kubernetes CA certificate URL")
 	flagRemoteSATokenPath        = flag.String("remote-sa-token-path", getEnv("REMOTE_SERVICE_ACCOUNT_TOKEN_PATH", ""), "Remote Kubernetes cluster token path")
-	flagResyncPeriod             = flag.Duration("resync-period", 60*time.Minute, "Pod watcher cache resync period")
+	flagFullStoreResyncPeriod    = flag.Duration("full-store-resync-period", 60*time.Minute, "Frequency to perform a full network set store resync from cache to calico GlocalNetworkPolicies")
+	flagPodResyncPeriod          = flag.Duration("pod-resync-period", 60*time.Minute, "Pod watcher cache resync period")
 	flagSetsPrefix               = flag.String("sets-prefix", getEnv("SETS_PREFIX", ""), "(required) A prefix used when creating network sets, needed in case of multiple sync instances for different clusters.")
 
 	saToken  = os.Getenv("WS_REMOTE_SERVICE_ACCOUNT_TOKEN")
@@ -107,12 +108,14 @@ func main() {
 		*flagSetsPrefix,
 		*flagLabelSelector,
 		*flagNetworkSetNameAnnotation,
-		*flagResyncPeriod,
+		*flagFullStoreResyncPeriod,
+		*flagPodResyncPeriod,
 	)
-	if err := r.Run(); err != nil {
+	if err := r.Start(); err != nil {
 		log.Logger.Error("Failed to start runner", "err", err)
 		os.Exit(1)
 	}
+	go r.Run()
 
 	sm := http.NewServeMux()
 	sm.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {
@@ -122,9 +125,15 @@ func main() {
 			w.WriteHeader(http.StatusServiceUnavailable)
 		}
 	})
-	log.Logger.Error(
-		"Listen and Serve",
-		"err", http.ListenAndServe(":8080", sm),
-	)
-
+	go func() {
+		log.Logger.Error("Listen and Serve", "err", http.ListenAndServe(":8080", sm))
+	}()
+	quit := make(chan os.Signal, 1)
+	for {
+		select {
+		case <-quit:
+			log.Logger.Info("Quitting")
+		}
+	}
+	r.Stop()
 }
