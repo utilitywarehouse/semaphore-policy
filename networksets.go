@@ -123,7 +123,7 @@ func (nss *NetworkSetStore) RunSyncLoop() {
 			}
 		case <-nss.fullSyncQueue:
 			log.Logger.Debug("staring a new full sync loop")
-			currentNetSets, err := calico.GetGlobalNetworkSet(nss.client, map[string]string{
+			currentNetSets, err := calico.GlobalNetworkSetList(nss.client, map[string]string{
 				labelManagedBy:         keyManagedBy,
 				labelRemoteClusterName: nss.cluster,
 			})

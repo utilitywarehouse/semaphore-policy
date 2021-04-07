@@ -66,8 +66,9 @@ func DeleteGlobalNetworkSet(client client.Interface, name string) error {
 	return err
 }
 
-// GetGlobalNetworkSet returns a list of sets that contain the passed labels
-func GetGlobalNetworkSet(client client.Interface, labels map[string]string) ([]v3.GlobalNetworkSet, error) {
+// GlobalNetworkSetList returns a list of sets that can match all the passed
+// labels (AND matching)
+func GlobalNetworkSetList(client client.Interface, labels map[string]string) ([]v3.GlobalNetworkSet, error) {
 	ctx := context.Background()
 	// calico GlobalNetworkSets List cannot use labels as selector, so we
 	// will have to fetch them all and make the selection manually
@@ -83,11 +84,7 @@ func GetGlobalNetworkSet(client client.Interface, labels map[string]string) ([]v
 		match := true
 		for key, value := range labels {
 			v, ok := set.Labels[key]
-			if !ok {
-				match = false
-				break
-			}
-			if v != value {
+			if !ok || v != value {
 				match = false
 				break
 			}
