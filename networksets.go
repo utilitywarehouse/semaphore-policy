@@ -130,23 +130,17 @@ func (nss *NetworkSetStore) RunSyncLoop() {
 			if err != nil {
 				log.Logger.Error("failed get the list of existing network sets, potential stale set left behind!", "cluster", nss.cluster)
 			}
-			var currentNetSetsIDs []string
 			for _, n := range currentNetSets {
-				log.Logger.Debug("Found existing network set", "id", n.Name)
-				currentNetSetsIDs = append(currentNetSetsIDs, n.Name)
+				// if network set is not in the store, trigger a sync that will delete it from kube resources as well.
+				// Otherwise it will be updated bellow.
+				if _, ok := nss.store[n.Name]; !ok {
+					if err := nss.syncToCalico(n.Name); err != nil {
+						log.Logger.Error("failed to sync netset to calico GlobalNetworkSets", "id", n.Name)
+						nss.requeue(n.Name)
+					}
+				}
 			}
 			for id, _ := range nss.store {
-				if err := nss.syncToCalico(id); err != nil {
-					log.Logger.Error("failed to sync netset to calico GlobalNetworkSets", "id", id)
-					nss.requeue(id)
-				}
-				if i, found := inSlice(currentNetSetsIDs, id); found {
-					currentNetSetsIDs = removeFromSlice(currentNetSetsIDs, i)
-				}
-			}
-			// Sync should delete the calico GlocalNetworkSets that remained
-			// in the list
-			for _, id := range currentNetSetsIDs {
 				if err := nss.syncToCalico(id); err != nil {
 					log.Logger.Error("failed to sync netset to calico GlobalNetworkSets", "id", id)
 					nss.requeue(id)
