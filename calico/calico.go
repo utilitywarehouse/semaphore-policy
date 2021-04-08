@@ -38,8 +38,8 @@ func newForConfig(kubeconfig string) (client.Interface, error) {
 func CreateOrUpdateGlobalNetworkSet(client client.Interface, name string, labels map[string]string, nets []string) error {
 	ctx := context.Background()
 	gns, err := client.GlobalNetworkSets().Get(ctx, name, calicoOptions.GetOptions{})
+	metrics.IncCalicoClientRequest("get", err)
 	if err != nil {
-		metrics.IncCalicoClientFailure("get")
 		// If Get errors try to create a new globalnetworkset
 		gns = &v3.GlobalNetworkSet{
 			ObjectMeta: metav1.ObjectMeta{
@@ -49,18 +49,14 @@ func CreateOrUpdateGlobalNetworkSet(client client.Interface, name string, labels
 			Spec: v3.GlobalNetworkSetSpec{Nets: nets},
 		}
 		_, err := client.GlobalNetworkSets().Create(ctx, gns, calicoOptions.SetOptions{})
-		if err != nil {
-			metrics.IncCalicoClientFailure("create")
-		}
+		metrics.IncCalicoClientRequest("create", err)
 		return err
 	}
 	// Else update the existing one
 	gns.Labels = labels
 	gns.Spec.Nets = nets
 	_, err = client.GlobalNetworkSets().Update(ctx, gns, calicoOptions.SetOptions{})
-	if err != nil {
-		metrics.IncCalicoClientFailure("update")
-	}
+	metrics.IncCalicoClientRequest("update", err)
 	return err
 }
 
@@ -68,14 +64,12 @@ func CreateOrUpdateGlobalNetworkSet(client client.Interface, name string, labels
 func DeleteGlobalNetworkSet(client client.Interface, name string) error {
 	ctx := context.Background()
 	_, err := client.GlobalNetworkSets().Get(ctx, name, calicoOptions.GetOptions{})
+	metrics.IncCalicoClientRequest("get", err)
 	if err != nil {
-		metrics.IncCalicoClientFailure("get")
 		return err
 	}
 	_, err = client.GlobalNetworkSets().Delete(ctx, name, calicoOptions.DeleteOptions{})
-	if err != nil {
-		metrics.IncCalicoClientFailure("delete")
-	}
+	metrics.IncCalicoClientRequest("delete", err)
 	return err
 }
 
@@ -86,8 +80,8 @@ func GlobalNetworkSetList(client client.Interface, labels map[string]string) ([]
 	// calico GlobalNetworkSets List cannot use labels as selector, so we
 	// will have to fetch them all and make the selection manually
 	netsetlist, err := client.GlobalNetworkSets().List(ctx, calicoOptions.ListOptions{})
+	metrics.IncCalicoClientRequest("list", err)
 	if err != nil {
-		metrics.IncCalicoClientFailure("list")
 		return []v3.GlobalNetworkSet{}, err
 	}
 	if len(labels) == 0 {

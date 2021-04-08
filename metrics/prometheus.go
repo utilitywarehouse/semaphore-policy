@@ -1,7 +1,7 @@
 // Package metrics contains global structures for capturing
 // kube-policy-semaphore metrics. The following metrics are implemented:
 //
-//   - kube_policy_semaphore_calico_client_failures{"type"}
+//   - kube_policy_semaphore_calico_client_request{"type", "success"}
 //   - kube_policy_semaphore_pod_watcher_failures{"type"}
 //   - kube_policy_semaphore_sync_queue_full_failures{"globalnetworkset"}
 //   - kube_policy_semaphore_sync_requeue{"globalnetworkset"}
@@ -12,12 +12,12 @@ import (
 )
 
 var (
-	calicoClientFailures = prometheus.NewCounterVec(
+	calicoClientRequest = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "kube_policy_semaphore_calico_client_failures",
-			Help: "Number of calico client failed requests.",
+			Name: "kube_policy_semaphore_calico_client_request",
+			Help: "Counts calico client requests.",
 		},
-		[]string{"type"},
+		[]string{"type", "success"},
 	)
 	podWatcherFailures = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
@@ -43,15 +43,20 @@ var (
 )
 
 func init() {
-	prometheus.MustRegister(calicoClientFailures)
+	prometheus.MustRegister(calicoClientRequest)
 	prometheus.MustRegister(podWatcherFailures)
 	prometheus.MustRegister(syncQueueFullFailures)
 	prometheus.MustRegister(syncRequeue)
 }
 
-func IncCalicoClientFailure(t string) {
-	calicoClientFailures.With(prometheus.Labels{
-		"type": t,
+func IncCalicoClientRequest(t string, err error) {
+	s := "1"
+	if err != nil {
+		s = "0"
+	}
+	calicoClientRequest.With(prometheus.Labels{
+		"type":    t,
+		"success": s,
 	}).Inc()
 }
 
