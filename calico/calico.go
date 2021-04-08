@@ -8,6 +8,8 @@ import (
 	client "github.com/projectcalico/libcalico-go/lib/clientv3"
 	calicoOptions "github.com/projectcalico/libcalico-go/lib/options"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/utilitywarehouse/kube-policy-semaphore/metrics"
 )
 
 // NewClient return a calico client
@@ -37,6 +39,7 @@ func CreateOrUpdateGlobalNetworkSet(client client.Interface, name string, labels
 	ctx := context.Background()
 	gns, err := client.GlobalNetworkSets().Get(ctx, name, calicoOptions.GetOptions{})
 	if err != nil {
+		metrics.IncCalicoClientFailure("get")
 		// If Get errors try to create a new globalnetworkset
 		gns = &v3.GlobalNetworkSet{
 			ObjectMeta: metav1.ObjectMeta{
@@ -46,12 +49,18 @@ func CreateOrUpdateGlobalNetworkSet(client client.Interface, name string, labels
 			Spec: v3.GlobalNetworkSetSpec{Nets: nets},
 		}
 		_, err := client.GlobalNetworkSets().Create(ctx, gns, calicoOptions.SetOptions{})
+		if err != nil {
+			metrics.IncCalicoClientFailure("create")
+		}
 		return err
 	}
 	// Else update the existing one
 	gns.Labels = labels
 	gns.Spec.Nets = nets
 	_, err = client.GlobalNetworkSets().Update(ctx, gns, calicoOptions.SetOptions{})
+	if err != nil {
+		metrics.IncCalicoClientFailure("update")
+	}
 	return err
 }
 
@@ -60,9 +69,13 @@ func DeleteGlobalNetworkSet(client client.Interface, name string) error {
 	ctx := context.Background()
 	_, err := client.GlobalNetworkSets().Get(ctx, name, calicoOptions.GetOptions{})
 	if err != nil {
+		metrics.IncCalicoClientFailure("get")
 		return err
 	}
 	_, err = client.GlobalNetworkSets().Delete(ctx, name, calicoOptions.DeleteOptions{})
+	if err != nil {
+		metrics.IncCalicoClientFailure("delete")
+	}
 	return err
 }
 
@@ -74,6 +87,7 @@ func GlobalNetworkSetList(client client.Interface, labels map[string]string) ([]
 	// will have to fetch them all and make the selection manually
 	netsetlist, err := client.GlobalNetworkSets().List(ctx, calicoOptions.ListOptions{})
 	if err != nil {
+		metrics.IncCalicoClientFailure("list")
 		return []v3.GlobalNetworkSet{}, err
 	}
 	if len(labels) == 0 {

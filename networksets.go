@@ -8,6 +8,7 @@ import (
 
 	"github.com/utilitywarehouse/kube-policy-semaphore/calico"
 	"github.com/utilitywarehouse/kube-policy-semaphore/log"
+	"github.com/utilitywarehouse/kube-policy-semaphore/metrics"
 )
 
 type NetworkSet struct {
@@ -155,6 +156,7 @@ func (nss *NetworkSetStore) RunSyncLoop() {
 
 func (nss *NetworkSetStore) requeue(id string) {
 	log.Logger.Debug("Requeueing sync task", "id", id)
+	metrics.IncSyncRequeue(id)
 	go func() {
 		time.Sleep(1)
 		nss.enqueue(id)
@@ -168,6 +170,7 @@ func (nss *NetworkSetStore) enqueue(id string) {
 		log.Logger.Debug("Sync task queued", "id", id)
 	case <-time.After(5 * time.Second):
 		log.Logger.Error("Timed out trying to queue a sync action for netset, run queue is full", "id", id)
+		metrics.IncSyncQueueFullFailures(id)
 		nss.requeue(id)
 	}
 }
