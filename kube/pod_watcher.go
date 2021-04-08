@@ -13,6 +13,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 
 	"github.com/utilitywarehouse/kube-policy-semaphore/log"
+	"github.com/utilitywarehouse/kube-policy-semaphore/metrics"
 )
 
 // PodEventHandler is the function to handle new events
@@ -53,6 +54,7 @@ func (pw *PodWatcher) Init() {
 			if err != nil {
 				log.Logger.Error("pw: list error", "err", err)
 				pw.ListHealthy = false
+				metrics.IncPodWatcherFailures("list")
 			} else {
 				pw.ListHealthy = true
 			}
@@ -64,6 +66,7 @@ func (pw *PodWatcher) Init() {
 			if err != nil {
 				log.Logger.Error("pw: watch error", "err", err)
 				pw.WatchHealthy = false
+				metrics.IncPodWatcherFailures("watch")
 			} else {
 				pw.WatchHealthy = true
 			}
