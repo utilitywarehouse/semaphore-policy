@@ -20,9 +20,9 @@ import (
 const (
 	labelManagedBy       = "managed-by"
 	keyManagedBy         = "calico-global-network-sync-operator"
-	labelNetSetCluster   = "semaphore.uw.system/cluster"
-	labelNetSetName      = "semaphore.uw.system/name"
-	labelNetSetNamespace = "semaphore.uw.system/namespace"
+	labelNetSetCluster   = "semaphore.uw.systems/cluster"
+	labelNetSetName      = "semaphore.uw.systems/name"
+	labelNetSetNamespace = "semaphore.uw.systems/namespace"
 )
 
 var (
