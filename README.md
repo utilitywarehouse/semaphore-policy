@@ -83,7 +83,7 @@ Spec:
 ### Example Calico Network Policy
 
 The following network policy will allow traffic from the above set:
----
+```
 apiVersion: crd.projectcalico.org/v1
 kind: NetworkPolicy
 metadata:
@@ -99,7 +99,7 @@ spec:
     source:
       selector: name == 'my-set' && namespace == '<remote-pod-namespace>' && remote-cluster-prefix == '<remote-cluster>'
       namespaceSelector: global()
----
+```
 
 * `namespaceSelector: global()` is needed so that the namespaced network policy
 is able to bind to GlobalNetworkSets.
