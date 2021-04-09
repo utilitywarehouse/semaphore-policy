@@ -21,10 +21,10 @@ func TestNetworkSets(t *testing.T) {
 	assert.Equal(t, 1, len(netsSetStore.store))
 	id := makeNetworkSetID("name", "namespace", "test")
 	expectedLables := map[string]string{
-		labelManagedBy:         keyManagedBy,
-		labelRemoteClusterName: "test",
-		labelNetSetName:        "name",
-		labelNetSetNamespace:   "namespace",
+		labelManagedBy:       keyManagedBy,
+		labelNetSetCluster:   "test",
+		labelNetSetName:      "name",
+		labelNetSetNamespace: "namespace",
 	}
 	assert.Equal(t, 1, len(netsSetStore.store[id].nets))
 	assert.Equal(t, "10.0.0.0/24", netsSetStore.store[id].nets[0])
@@ -54,10 +54,10 @@ func TestNetworkSets(t *testing.T) {
 	assert.Equal(t, expectedLables, netsSetStore.store[id].labels)
 	id2 := makeNetworkSetID("name2", "namespace2", "test")
 	expectedLables2 := map[string]string{
-		labelManagedBy:         keyManagedBy,
-		labelRemoteClusterName: "test",
-		labelNetSetName:        "name2",
-		labelNetSetNamespace:   "namespace2",
+		labelManagedBy:       keyManagedBy,
+		labelNetSetCluster:   "test",
+		labelNetSetName:      "name2",
+		labelNetSetNamespace: "namespace2",
 	}
 	assert.Equal(t, 1, len(netsSetStore.store[id2].nets))
 	assert.Equal(t, "10.0.0.1/24", netsSetStore.store[id2].nets[0])
