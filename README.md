@@ -14,14 +14,10 @@ kubernetes cross cluster pod to pod communication.
 Usage of ./kube-policy-semaphore:
   -full-store-resync-period duration
         Frequency to perform a full network set store resync from cache to calico GlocalNetworkPolicies (default 1h0m0s)
-  -label-selector string
-        Label of pods to watch and create/update network sets. (default "uw.systems/networksets=true")
   -local-kube-config string
         Path of the local kube cluster config file, if not provided the app will try to get in cluster config
   -log-level string
         Log level (default "info")
-  -networkset-name-annotation string
-        Pod annotation with the name of the set the pod belong to (default "uw.systems/networkset-name")
   -pod-resync-period duration
         Pod watcher cache resync period (default 1h0m0s)
   -remote-api-url string
@@ -31,31 +27,31 @@ Usage of ./kube-policy-semaphore:
   -remote-sa-token-path string
         Remote Kubernetes cluster token path
   -target-cluster-name string
-        (required) The name of the cluster from which pods are synced as networksets.It will also be used as a prefix used when creating network sets.
+        (required) The name of the cluster from which pods are synced as networksets. It will also be used as a prefix used when creating network sets.
   -target-kube-config string
-        (Required) Path of the target cluster kube config file to add wg peers from
+        (Required) Path of the target cluster kube config file to watch pods
 ```
 
 ## Operator
 
-  Deploying with the default values for label selector and networkset name
-annotation (see usage above), kube-policy-semaphore will watch the target
-cluster pods which are labelled with: `uw.systems/networksets=true`. For these
-pods it will extract a network set name from the respective annotation and
-create a GlobalNetworkSet resource (or amend an existing one) on the local
-cluster.
+  Kube-policy-semaphore will watch the target cluster pods which are labelled
+with: `semaphore.uw.system/name`. For these pods it will extract a name from
+the label and will use it along with the namespace of the pod and the cluster it
+resides to create a GlobalNetworkSet resource (or amend an existing one) on the
+local cluster. Using namespace and cluster name will help avoiding conflicts
+with workloads from different locations that want to use the same value for
+`semaphore.uw.system/name`.
 
-  For example annotating a pod with `uw.systems/networkset-name=my-set` will
-tell the operator to add the pod ip to a network set named my-set. In order to
-avoid conflicting with other namespaces' network sets, the operator will try to
-create a GlobalNetworkSet calico resource named:
-`<remote-cluster>-<remote-pod-namespace>-my-set`. Additionally the
-GlobalNetworkSet will be labelled with the following:
+  For example annotating a pod with `semaphore.uw.system/name=my-app` under a
+namespace called `my-ns` in a cluster called `my-cluster` will tell the operator
+to add the pod's ip to a network set named my-cluster-my-ns-my-app. In order to
+make it easier to select that set in network policies, the following labels will
+be added:
 ```
 managed-by=calico-global-network-sync-operator
-name=my-set
-namespace=<remote-pod-namespace>
-remote-cluster-name=<remote-cluster>
+semaphore.uw.system/name=my-app
+semaphore.uw.system/namespace=my-ns
+semaphore.uw.system/cluster=my-cluster
 ```
 
   Thus, one can use the above labels to target the created GlocalNetworkSet
@@ -66,12 +62,12 @@ set pods.
 
 Example of a generated global network set from the operator:
 ```
-Name:         <remote-cluster>-<remote-pod-namespace>-my-set
+Name:         my-cluster-my-ns-my-app
 Namespace:
 Labels:       managed-by=calico-global-network-sync-operator
-              name=my-set
-              namespace=<remote-pod-namespace>
-              remote-cluster-name=<remote-cluster>
+              semaphore.uw.system/name=my-app
+              semaphore.uw.system/namespace=my-ns
+              semaphore.uw.system/cluster=my-cluster
 API Version:  crd.projectcalico.org/v1
 Kind:         GlobalNetworkSet
 Spec:
@@ -97,7 +93,7 @@ spec:
   - action: Allow
     protocol: TCP
     source:
-      selector: name == 'my-set' && namespace == '<remote-pod-namespace>' && remote-cluster-name == '<remote-cluster>'
+      selector: semaphore.uw.system/name == 'my-app' && semaphore.uw.system/namespace == 'my-ns' && semaphore.uw.system/cluster == 'my-cluster'
       namespaceSelector: global()
 ```
 

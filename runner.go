@@ -17,16 +17,14 @@ import (
 type Runner struct {
 	podWatcher            *kube.PodWatcher
 	nsStore               NetworkSetStore
-	nameAnnotation        string
 	canSync               bool
 	fullStoreResyncPeriod time.Duration
 	stop                  chan struct{}
 }
 
-func newRunner(client calicoClient.Interface, watchClient kubernetes.Interface, cluster, labelSelector, nameAnnotaion string, fullStoreResyncPeriod, podResyncPeriod time.Duration) *Runner {
+func newRunner(client calicoClient.Interface, watchClient kubernetes.Interface, cluster string, fullStoreResyncPeriod, podResyncPeriod time.Duration) *Runner {
 	runner := &Runner{
 		nsStore:               newNetworkSetStore(cluster, client),
-		nameAnnotation:        nameAnnotaion,
 		canSync:               false,
 		fullStoreResyncPeriod: fullStoreResyncPeriod,
 		stop:                  make(chan struct{}),
@@ -36,7 +34,7 @@ func newRunner(client calicoClient.Interface, watchClient kubernetes.Interface, 
 		watchClient,
 		podResyncPeriod,
 		runner.PodEventHandler,
-		labelSelector,
+		labelNetSetName,
 	)
 	runner.podWatcher = podWatcher
 	runner.podWatcher.Init()
@@ -101,9 +99,9 @@ func (r *Runner) PodEventHandler(eventType watch.EventType, old *v1.Pod, new *v1
 }
 
 func (r *Runner) onPodAdd(pod *v1.Pod) {
-	name, ok := pod.Annotations[r.nameAnnotation]
+	name, ok := pod.Labels[labelNetSetName]
 	if !ok {
-		log.Logger.Error("Annotation not found for labelled pod", "anno", r.nameAnnotation, "pod", pod.Name)
+		log.Logger.Error("Could not findlabel for pod", "label", labelNetSetName, "pod", pod.Name)
 		return
 	}
 	if pod.Status.PodIP != "" {
@@ -115,9 +113,9 @@ func (r *Runner) onPodAdd(pod *v1.Pod) {
 }
 
 func (r *Runner) onPodModify(old *v1.Pod, new *v1.Pod) {
-	name, ok := new.Annotations[r.nameAnnotation]
+	name, ok := new.Labels[labelNetSetName]
 	if !ok {
-		log.Logger.Error("Annotation not found for labelled pod", "anno", r.nameAnnotation, "pod", new.Name)
+		log.Logger.Error("Could not find label for pod", "label", labelNetSetName, "pod", new.Name)
 		return
 	}
 	altered := false
@@ -141,9 +139,9 @@ func (r *Runner) onPodModify(old *v1.Pod, new *v1.Pod) {
 }
 
 func (r *Runner) onPodDelete(pod *v1.Pod) {
-	name, ok := pod.Annotations[r.nameAnnotation]
+	name, ok := pod.Labels[labelNetSetName]
 	if !ok {
-		log.Logger.Error("Annotation not found for labelled pod", "anno", r.nameAnnotation, "pod", pod.Name)
+		log.Logger.Error("Could not find label for pod", "label", labelNetSetName, "pod", pod.Name)
 		return
 	}
 	if pod.Status.PodIP != "" {

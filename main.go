@@ -18,25 +18,23 @@ import (
 )
 
 const (
-	labelManagedBy         = "managed-by"
-	keyManagedBy           = "calico-global-network-sync-operator"
-	labelRemoteClusterName = "remote-cluster-name"
-	labelNetSetName        = "name"
-	labelNetSetNamespace   = "namespace"
+	labelManagedBy       = "managed-by"
+	keyManagedBy         = "calico-global-network-sync-operator"
+	labelNetSetCluster   = "semaphore.uw.system/cluster"
+	labelNetSetName      = "semaphore.uw.system/name"
+	labelNetSetNamespace = "semaphore.uw.system/namespace"
 )
 
 var (
-	flagKubeConfigPath           = flag.String("local-kube-config", getEnv("KPS_LOCAL_KUBE_CONFIG", ""), "Path of the local kube cluster config file, if not provided the app will try to get in cluster config")
-	flagTargetKubeConfigPath     = flag.String("target-kube-config", getEnv("KPS_TARGET_KUBE_CONFIG", ""), "(Required) Path of the target cluster kube config file to add wg peers from")
-	flagLabelSelector            = flag.String("label-selector", getEnv("KPS_LABEL_SELECTOR", "uw.systems/networksets=true"), "Label of pods to watch and create/update network sets.")
-	flagNetworkSetNameAnnotation = flag.String("networkset-name-annotation", getEnv("KPS_NETSET_NAME_ANNOTATION", "uw.systems/networkset-name"), "Pod annotation with the name of the set the pod belong to")
-	flagLogLevel                 = flag.String("log-level", getEnv("KPS_LOG_LEVEL", "info"), "Log level")
-	flagRemoteAPIURL             = flag.String("remote-api-url", getEnv("KPS_REMOTE_API_URL", ""), "Remote Kubernetes API server URL")
-	flagRemoteCAURL              = flag.String("remote-ca-url", getEnv("KPS_REMOTE_CA_URL", ""), "Remote Kubernetes CA certificate URL")
-	flagRemoteSATokenPath        = flag.String("remote-sa-token-path", getEnv("KPS_REMOTE_SERVICE_ACCOUNT_TOKEN_PATH", ""), "Remote Kubernetes cluster token path")
-	flagFullStoreResyncPeriod    = flag.Duration("full-store-resync-period", 60*time.Minute, "Frequency to perform a full network set store resync from cache to calico GlocalNetworkPolicies")
-	flagPodResyncPeriod          = flag.Duration("pod-resync-period", 60*time.Minute, "Pod watcher cache resync period")
-	flagTargetCluster            = flag.String("target-cluster-name", getEnv("KPS_TARGET_CLUSTER_NAME", ""), "(required) The name of the cluster from which pods are synced as networksets.It will also be used as a prefix used when creating network sets.")
+	flagKubeConfigPath        = flag.String("local-kube-config", getEnv("KPS_LOCAL_KUBE_CONFIG", ""), "Path of the local kube cluster config file, if not provided the app will try to get in cluster config")
+	flagTargetKubeConfigPath  = flag.String("target-kube-config", getEnv("KPS_TARGET_KUBE_CONFIG", ""), "(Required) Path of the target cluster kube config file to watch pods")
+	flagLogLevel              = flag.String("log-level", getEnv("KPS_LOG_LEVEL", "info"), "Log level")
+	flagRemoteAPIURL          = flag.String("remote-api-url", getEnv("KPS_REMOTE_API_URL", ""), "Remote Kubernetes API server URL")
+	flagRemoteCAURL           = flag.String("remote-ca-url", getEnv("KPS_REMOTE_CA_URL", ""), "Remote Kubernetes CA certificate URL")
+	flagRemoteSATokenPath     = flag.String("remote-sa-token-path", getEnv("KPS_REMOTE_SERVICE_ACCOUNT_TOKEN_PATH", ""), "Remote Kubernetes cluster token path")
+	flagFullStoreResyncPeriod = flag.Duration("full-store-resync-period", 60*time.Minute, "Frequency to perform a full network set store resync from cache to calico GlocalNetworkPolicies")
+	flagPodResyncPeriod       = flag.Duration("pod-resync-period", 60*time.Minute, "Pod watcher cache resync period")
+	flagTargetCluster         = flag.String("target-cluster-name", getEnv("KPS_TARGET_CLUSTER_NAME", ""), "(required) The name of the cluster from which pods are synced as networksets. It will also be used as a prefix used when creating network sets.")
 
 	saToken  = os.Getenv("KPS_REMOTE_SERVICE_ACCOUNT_TOKEN")
 	bearerRe = regexp.MustCompile(`[A-Z|a-z0-9\-\._~\+\/]+=*`)
@@ -107,8 +105,6 @@ func main() {
 		homeCalicoClient,
 		remoteClient,
 		*flagTargetCluster,
-		*flagLabelSelector,
-		*flagNetworkSetNameAnnotation,
 		*flagFullStoreResyncPeriod,
 		*flagPodResyncPeriod,
 	)
