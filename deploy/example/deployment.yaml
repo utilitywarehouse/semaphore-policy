@@ -18,7 +18,7 @@ spec:
         prometheus.io/path: /metrics
         prometheus.io/port: "8080"
     spec:
-      serviceAccountName: kube-policy-semaphore-calico
+      serviceAccountName: kube-policy-semaphore
       containers:
         - name: kube-policy-semaphore
           image: kube-policy-semaphore
