@@ -101,7 +101,7 @@ func (r *Runner) PodEventHandler(eventType watch.EventType, old *v1.Pod, new *v1
 func (r *Runner) onPodAdd(pod *v1.Pod) {
 	name, ok := pod.Labels[labelNetSetName]
 	if !ok {
-		log.Logger.Error("Could not findlabel for pod", "label", labelNetSetName, "pod", pod.Name)
+		log.Logger.Error("Could not find label for pod", "label", labelNetSetName, "pod", pod.Name)
 		return
 	}
 	if pod.Status.PodIP != "" {
