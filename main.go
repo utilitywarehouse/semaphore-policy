@@ -26,19 +26,19 @@ const (
 )
 
 var (
-	flagKubeConfigPath           = flag.String("local-kube-config", getEnv("LOCAL_KUBE_CONFIG", ""), "Path of the local kube cluster config file, if not provided the app will try to get in cluster config")
-	flagTargetKubeConfigPath     = flag.String("target-kube-config", getEnv("TARGET_KUBE_CONFIG", ""), "(Required) Path of the target cluster kube config file to add wg peers from")
-	flagLabelSelector            = flag.String("label-selector", getEnv("LABEL_SELECTOR", "uw.systems/networksets=true"), "Label of pods to watch and create/update network sets.")
-	flagNetworkSetNameAnnotation = flag.String("networkset-name-annotation", getEnv("NS_NAME_ANNOTATION", "uw.systems/networkset-name"), "Pod annotation with the name of the set the pod belong to")
-	flagLogLevel                 = flag.String("log-level", getEnv("LOG_LEVEL", "info"), "Log level")
-	flagRemoteAPIURL             = flag.String("remote-api-url", getEnv("REMOTE_API_URL", ""), "Remote Kubernetes API server URL")
-	flagRemoteCAURL              = flag.String("remote-ca-url", getEnv("REMOTE_CA_URL", ""), "Remote Kubernetes CA certificate URL")
-	flagRemoteSATokenPath        = flag.String("remote-sa-token-path", getEnv("REMOTE_SERVICE_ACCOUNT_TOKEN_PATH", ""), "Remote Kubernetes cluster token path")
+	flagKubeConfigPath           = flag.String("local-kube-config", getEnv("KPS_LOCAL_KUBE_CONFIG", ""), "Path of the local kube cluster config file, if not provided the app will try to get in cluster config")
+	flagTargetKubeConfigPath     = flag.String("target-kube-config", getEnv("KPS_TARGET_KUBE_CONFIG", ""), "(Required) Path of the target cluster kube config file to add wg peers from")
+	flagLabelSelector            = flag.String("label-selector", getEnv("KPS_LABEL_SELECTOR", "uw.systems/networksets=true"), "Label of pods to watch and create/update network sets.")
+	flagNetworkSetNameAnnotation = flag.String("networkset-name-annotation", getEnv("KPS_NETSET_NAME_ANNOTATION", "uw.systems/networkset-name"), "Pod annotation with the name of the set the pod belong to")
+	flagLogLevel                 = flag.String("log-level", getEnv("KPS_LOG_LEVEL", "info"), "Log level")
+	flagRemoteAPIURL             = flag.String("remote-api-url", getEnv("KPS_REMOTE_API_URL", ""), "Remote Kubernetes API server URL")
+	flagRemoteCAURL              = flag.String("remote-ca-url", getEnv("KPS_REMOTE_CA_URL", ""), "Remote Kubernetes CA certificate URL")
+	flagRemoteSATokenPath        = flag.String("remote-sa-token-path", getEnv("KPS_REMOTE_SERVICE_ACCOUNT_TOKEN_PATH", ""), "Remote Kubernetes cluster token path")
 	flagFullStoreResyncPeriod    = flag.Duration("full-store-resync-period", 60*time.Minute, "Frequency to perform a full network set store resync from cache to calico GlocalNetworkPolicies")
 	flagPodResyncPeriod          = flag.Duration("pod-resync-period", 60*time.Minute, "Pod watcher cache resync period")
-	flagSetsPrefix               = flag.String("sets-prefix", getEnv("SETS_PREFIX", ""), "(required) A prefix used when creating network sets, needed in case of multiple sync instances for different clusters.")
+	flagTargetCluster            = flag.String("target-cluster-name", getEnv("KPS_TARGET_CLUSTER_NAME", ""), "(required) The name of the cluster from which pods are synced as networksets.It will also be used as a prefix used when creating network sets.")
 
-	saToken  = os.Getenv("WS_REMOTE_SERVICE_ACCOUNT_TOKEN")
+	saToken  = os.Getenv("KPS_REMOTE_SERVICE_ACCOUNT_TOKEN")
 	bearerRe = regexp.MustCompile(`[A-Z|a-z0-9\-\._~\+\/]+=*`)
 )
 
@@ -58,8 +58,8 @@ func getEnv(key, defaultValue string) string {
 func main() {
 	flag.Parse()
 	log.InitLogger("kube-policy-semaphore", *flagLogLevel)
-	if *flagSetsPrefix == "" {
-		log.Logger.Error("Must specify non-empty prefix for the created globalnetworksets")
+	if *flagTargetCluster == "" {
+		log.Logger.Error("Must specify non-empty target cluster naeme for the created globalnetworksets")
 		usage()
 	}
 	if *flagRemoteSATokenPath != "" {
@@ -106,7 +106,7 @@ func main() {
 	r := newRunner(
 		homeCalicoClient,
 		remoteClient,
-		*flagSetsPrefix,
+		*flagTargetCluster,
 		*flagLabelSelector,
 		*flagNetworkSetNameAnnotation,
 		*flagFullStoreResyncPeriod,

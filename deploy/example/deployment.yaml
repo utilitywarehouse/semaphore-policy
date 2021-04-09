@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kube-policy-semaphore
+  labels:
+    app: kube-policy-semaphore
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kube-policy-semaphore
+  template:
+    metadata:
+      labels:
+        app: kube-policy-semaphore
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/path: /metrics
+        prometheus.io/port: '8080'
+    spec:
+      serviceAccountName: kube-policy-semaphore
+      containers:
+        - name: kube-policy-semaphore
+          image: kube-policy-semaphore
+          env:
+            - name: KPS_REMOTE_SERVICE_ACCOUNT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: target-kube-token
+                  key: token
+            - name: KPS_REMOTE_API_URL
+              value: 'https://lb.master.dev.local.uw.systems'
+            - name: KPS_REMOTE_CA_URL
+              value: 'https://kube-ca-cert.dev.local.uw.systems'
+            - name: KPS_TARGET_CLUSTER_NAME
+              value: 'target'
+          ports:
+            - name: readiness-port
+              containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: readiness-port
+            periodSeconds: 10
+            failureThreshold: 1
