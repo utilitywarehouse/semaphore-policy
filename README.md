@@ -62,7 +62,7 @@ remote-cluster-name=<remote-cluster>
 inside a calico network policy on the local cluster and allow traffic from the
 set pods.
 
-### Examplei Generated GlobalNetworkSets
+### Example Generated GlobalNetworkSets
 
 Example of a generated global network set from the operator:
 ```
