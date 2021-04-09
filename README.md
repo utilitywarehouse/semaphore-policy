@@ -97,7 +97,7 @@ spec:
   - action: Allow
     protocol: TCP
     source:
-      selector: name == 'my-set' && namespace == '<remote-pod-namespace>' && remote-cluster-prefix == '<remote-cluster>'
+      selector: name == 'my-set' && namespace == '<remote-pod-namespace>' && remote-cluster-name == '<remote-cluster>'
       namespaceSelector: global()
 ```
 
