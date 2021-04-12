@@ -21,7 +21,7 @@ func TestNetworkSets(t *testing.T) {
 	assert.Equal(t, 1, len(netsSetStore.store))
 	id := makeNetworkSetID("name", "namespace", "test")
 	expectedLables := map[string]string{
-		labelManagedBy:       keyManagedBy,
+		labelManagedBy:       valueManagedBy,
 		labelNetSetCluster:   "test",
 		labelNetSetName:      "name",
 		labelNetSetNamespace: "namespace",
@@ -54,7 +54,7 @@ func TestNetworkSets(t *testing.T) {
 	assert.Equal(t, expectedLables, netsSetStore.store[id].labels)
 	id2 := makeNetworkSetID("name2", "namespace2", "test")
 	expectedLables2 := map[string]string{
-		labelManagedBy:       keyManagedBy,
+		labelManagedBy:       valueManagedBy,
 		labelNetSetCluster:   "test",
 		labelNetSetName:      "name2",
 		labelNetSetNamespace: "namespace2",

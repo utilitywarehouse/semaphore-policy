@@ -42,7 +42,7 @@ func newNetworkSetStore(cluster string, client calicoClient.Interface) NetworkSe
 
 func (nss *NetworkSetStore) addNetworkSet(id, name, namespace, net string) *NetworkSet {
 	labels := map[string]string{
-		labelManagedBy:       keyManagedBy,
+		labelManagedBy:       valueManagedBy,
 		labelNetSetCluster:   nss.cluster,
 		labelNetSetName:      name,
 		labelNetSetNamespace: namespace,
@@ -125,7 +125,7 @@ func (nss *NetworkSetStore) RunSyncLoop() {
 		case <-nss.fullSyncQueue:
 			log.Logger.Debug("staring a new full sync loop")
 			currentNetSets, err := calico.GlobalNetworkSetList(nss.client, map[string]string{
-				labelManagedBy:     keyManagedBy,
+				labelManagedBy:     valueManagedBy,
 				labelNetSetCluster: nss.cluster,
 			})
 			if err != nil {
