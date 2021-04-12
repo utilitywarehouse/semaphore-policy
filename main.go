@@ -19,7 +19,7 @@ import (
 
 const (
 	labelManagedBy       = "managed-by"
-	keyManagedBy         = "calico-global-network-sync-operator"
+	valueManagedBy       = "kube-policy-semaphore"
 	labelNetSetCluster   = "semaphore.uw.systems/cluster"
 	labelNetSetName      = "semaphore.uw.systems/name"
 	labelNetSetNamespace = "semaphore.uw.systems/namespace"
