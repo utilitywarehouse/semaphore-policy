@@ -9,6 +9,6 @@ secretGenerator:
     files:
       - token=secrets/target-kube-token
 images:
-  - name: kube-policy-semaphore
-    newName: quay.io/utilitywarehouse/kube-policy-semaphore
+  - name: semaphore-policy
+    newName: quay.io/utilitywarehouse/semaphore-policy
     newTag: latest

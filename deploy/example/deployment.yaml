@@ -1,27 +1,27 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: kube-policy-semaphore
+  name: semaphore-policy
   labels:
-    app: kube-policy-semaphore
+    app: semaphore-policy
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: kube-policy-semaphore
+      app: semaphore-policy
   template:
     metadata:
       labels:
-        app: kube-policy-semaphore
+        app: semaphore-policy
       annotations:
         prometheus.io/scrape: 'true'
         prometheus.io/path: /metrics
         prometheus.io/port: '8080'
     spec:
-      serviceAccountName: kube-policy-semaphore
+      serviceAccountName: semaphore-policy
       containers:
-        - name: kube-policy-semaphore
-          image: kube-policy-semaphore
+        - name: semaphore-policy
+          image: semaphore-policy
           env:
             - name: KPS_REMOTE_SERVICE_ACCOUNT_TOKEN
               valueFrom:

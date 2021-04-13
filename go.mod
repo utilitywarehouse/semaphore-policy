@@ -1,4 +1,4 @@
-module github.com/utilitywarehouse/kube-policy-semaphore
+module github.com/utilitywarehouse/semaphore-policy
 
 go 1.16
 

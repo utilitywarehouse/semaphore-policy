@@ -12,8 +12,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 
-	"github.com/utilitywarehouse/kube-policy-semaphore/log"
-	"github.com/utilitywarehouse/kube-policy-semaphore/metrics"
+	"github.com/utilitywarehouse/semaphore-policy/log"
+	"github.com/utilitywarehouse/semaphore-policy/metrics"
 )
 
 // PodEventHandler is the function to handle new events

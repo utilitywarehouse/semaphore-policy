@@ -1,17 +1,17 @@
-# kube-policy-semaphore
+# semaphore-policy
 
 This is an kubernetes operator that watches pods on a remote cluster based on
-a label and an annotation, and creates and manages local calico
-GlobalNetworkSets resources that contain the watched pods' ip addresses. As a
-result, we can use the produced sets of ips to create local NetworkPolicies for
-kubernetes cross cluster pod to pod communication.
+a label and creates and manages local calico GlobalNetworkSets resources that
+contain the watched pods' ip addresses. As a result, we can use the produced
+sets of ips to create local NetworkPolicies for kubernetes cross cluster pod to
+pod communication.
 
 # Usage
 
 ## Flags
 
 ```
-Usage of ./kube-policy-semaphore:
+Usage of ./semaphore-policy:
   -full-store-resync-period duration
         Frequency to perform a full network set store resync from cache to calico GlocalNetworkPolicies (default 1h0m0s)
   -local-kube-config string
@@ -34,7 +34,7 @@ Usage of ./kube-policy-semaphore:
 
 ## Operator
 
-  Kube-policy-semaphore will watch the target cluster pods which are labelled
+  The policy operator will watch the target cluster pods which are labelled
 with: `semaphore.uw.systems/name`. For these pods it will extract a name from
 the label and will use it along with the namespace of the pod and the cluster it
 resides to create a GlobalNetworkSet resource (or amend an existing one) on the
@@ -102,7 +102,7 @@ is able to bind to GlobalNetworkSets.
 
 # Deploy
 
-In order to deploy kube-policy-semaphore, first we need to deploy a service
+In order to deploy semaphore-policy, first we need to deploy a service
 account to the remote target cluster and grant it the required permissions to
 be able to watch pods. For that one could use our kustomize [base](./deploy/kustomize/remote/)
 directly.

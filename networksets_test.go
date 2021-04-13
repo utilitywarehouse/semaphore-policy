@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/utilitywarehouse/kube-policy-semaphore/log"
+	"github.com/utilitywarehouse/semaphore-policy/log"
 )
 
 func TestNetworkSets(t *testing.T) {

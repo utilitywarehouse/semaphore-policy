@@ -6,9 +6,9 @@ import (
 
 	calicoClient "github.com/projectcalico/libcalico-go/lib/clientv3"
 
-	"github.com/utilitywarehouse/kube-policy-semaphore/calico"
-	"github.com/utilitywarehouse/kube-policy-semaphore/log"
-	"github.com/utilitywarehouse/kube-policy-semaphore/metrics"
+	"github.com/utilitywarehouse/semaphore-policy/calico"
+	"github.com/utilitywarehouse/semaphore-policy/log"
+	"github.com/utilitywarehouse/semaphore-policy/metrics"
 )
 
 type NetworkSet struct {

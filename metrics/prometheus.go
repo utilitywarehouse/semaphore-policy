@@ -1,5 +1,5 @@
 // Package metrics contains global structures for capturing
-// kube-policy-semaphore metrics. The following metrics are implemented:
+// semaphore-policy metrics. The following metrics are implemented:
 //
 //   - kube_policy_semaphore_calico_client_request{"type", "success"}
 //   - kube_policy_semaphore_pod_watcher_failures{"type"}

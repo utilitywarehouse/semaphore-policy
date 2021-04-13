@@ -10,8 +10,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 
-	"github.com/utilitywarehouse/kube-policy-semaphore/kube"
-	"github.com/utilitywarehouse/kube-policy-semaphore/log"
+	"github.com/utilitywarehouse/semaphore-policy/kube"
+	"github.com/utilitywarehouse/semaphore-policy/log"
 )
 
 type Runner struct {
