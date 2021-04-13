@@ -9,7 +9,7 @@ import (
 	calicoOptions "github.com/projectcalico/libcalico-go/lib/options"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/utilitywarehouse/kube-policy-semaphore/metrics"
+	"github.com/utilitywarehouse/semaphore-policy/metrics"
 )
 
 // NewClient return a calico client
