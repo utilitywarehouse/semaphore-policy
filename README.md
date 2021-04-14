@@ -35,23 +35,23 @@ Usage of ./semaphore-policy:
 ## Operator
 
   The policy operator will watch the target cluster pods which are labelled
-with: `semaphore.uw.systems/name`. For these pods it will extract a name from
+with: `policy.semaphore.uw.io/name`. For these pods it will extract a name from
 the label and will use it along with the namespace of the pod and the cluster it
 resides to create a GlobalNetworkSet resource (or amend an existing one) on the
 local cluster. Using namespace and cluster name will help avoiding conflicts
 with workloads from different locations that want to use the same value for
-`semaphore.uw.systems/name`.
+`policy.semaphore.uw.io/name`.
 
-  For example annotating a pod with `semaphore.uw.systems/name=my-app` under a
+  For example annotating a pod with `policy.semaphore.uw.io/name=my-app` under a
 namespace called `my-ns` in a cluster called `my-cluster` will tell the operator
 to add the pod's ip to a network set named my-cluster-my-ns-my-app. In order to
 make it easier to select that set in network policies, the following labels will
 be added:
 ```
 managed-by=calico-global-network-sync-operator
-semaphore.uw.systems/name=my-app
-semaphore.uw.systems/namespace=my-ns
-semaphore.uw.systems/cluster=my-cluster
+policy.semaphore.uw.io/name=my-app
+policy.semaphore.uw.io/namespace=my-ns
+policy.semaphore.uw.io/cluster=my-cluster
 ```
 
   Thus, one can use the above labels to target the created GlocalNetworkSet
@@ -65,9 +65,9 @@ Example of a generated global network set from the operator:
 Name:         my-cluster-my-ns-my-app
 Namespace:
 Labels:       managed-by=calico-global-network-sync-operator
-              semaphore.uw.systems/name=my-app
-              semaphore.uw.systems/namespace=my-ns
-              semaphore.uw.systems/cluster=my-cluster
+              policy.semaphore.uw.io/name=my-app
+              policy.semaphore.uw.io/namespace=my-ns
+              policy.semaphore.uw.io/cluster=my-cluster
 API Version:  crd.projectcalico.org/v1
 Kind:         GlobalNetworkSet
 Spec:
@@ -93,7 +93,7 @@ spec:
   - action: Allow
     protocol: TCP
     source:
-      selector: semaphore.uw.systems/name == 'my-app' && semaphore.uw.systems/namespace == 'my-ns' && semaphore.uw.systems/cluster == 'my-cluster'
+      selector: policy.semaphore.uw.io/name == 'my-app' && policy.semaphore.uw.io/namespace == 'my-ns' && policy.semaphore.uw.io/cluster == 'my-cluster'
       namespaceSelector: global()
 ```
 
