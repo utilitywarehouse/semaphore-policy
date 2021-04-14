@@ -20,9 +20,9 @@ import (
 const (
 	labelManagedBy       = "managed-by"
 	valueManagedBy       = "semaphore-policy"
-	labelNetSetCluster   = "semaphore.uw.systems/cluster"
-	labelNetSetName      = "semaphore.uw.systems/name"
-	labelNetSetNamespace = "semaphore.uw.systems/namespace"
+	labelNetSetCluster   = "policy.semaphore.uw.io/cluster"
+	labelNetSetName      = "policy.semaphore.uw.io/name"
+	labelNetSetNamespace = "policy.semaphore.uw.io/namespace"
 )
 
 var (
