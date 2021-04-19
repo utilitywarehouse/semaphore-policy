@@ -1,10 +1,10 @@
 // Package metrics contains global structures for capturing
 // semaphore-policy metrics. The following metrics are implemented:
 //
-//   - kube_policy_semaphore_calico_client_request{"type", "success"}
-//   - kube_policy_semaphore_pod_watcher_failures{"type"}
-//   - kube_policy_semaphore_sync_queue_full_failures{"globalnetworkset"}
-//   - kube_policy_semaphore_sync_requeue{"globalnetworkset"}
+//   - semaphore_policy_calico_client_request{"type", "success"}
+//   - semaphore_policy_pod_watcher_failures{"type"}
+//   - semaphore_policy_sync_queue_full_failures{"globalnetworkset"}
+//   - semaphore_policy_sync_requeue{"globalnetworkset"}
 package metrics
 
 import (
@@ -14,28 +14,28 @@ import (
 var (
 	calicoClientRequest = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "kube_policy_semaphore_calico_client_request",
+			Name: "semaphore_policy_calico_client_request",
 			Help: "Counts calico client requests.",
 		},
 		[]string{"type", "success"},
 	)
 	podWatcherFailures = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "kube_policy_semaphore_pod_watcher_failures",
+			Name: "semaphore_policy_pod_watcher_failures",
 			Help: "Number of failed pod watcher actions (watch|list).",
 		},
 		[]string{"type"},
 	)
 	syncQueueFullFailures = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "kube_policy_semaphore_sync_queue_full_failures",
+			Name: "semaphore_policy_sync_queue_full_failures",
 			Help: "Number of times a sync task was not added to the sync queue in time because the queue was full.",
 		},
 		[]string{"globalnetworkset"},
 	)
 	syncRequeue = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "kube_policy_semaphore_sync_requeue",
+			Name: "semaphore_policy_sync_requeue",
 			Help: "Number of attempts to requeue a sync.",
 		},
 		[]string{"globalnetworkset"},
