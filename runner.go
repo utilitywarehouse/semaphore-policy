@@ -15,19 +15,17 @@ import (
 )
 
 type Runner struct {
-	podWatcher            *kube.PodWatcher
-	nsStore               NetworkSetStore
-	canSync               bool
-	fullStoreResyncPeriod time.Duration
-	stop                  chan struct{}
+	podWatcher *kube.PodWatcher
+	nsStore    NetworkSetStore
+	canSync    bool
+	stop       chan struct{}
 }
 
-func newRunner(client calicoClient.Interface, watchClient kubernetes.Interface, cluster string, fullStoreResyncPeriod, podResyncPeriod time.Duration) *Runner {
+func newRunner(client calicoClient.Interface, watchClient kubernetes.Interface, cluster string, podResyncPeriod time.Duration) *Runner {
 	runner := &Runner{
-		nsStore:               newNetworkSetStore(cluster, client),
-		canSync:               false,
-		fullStoreResyncPeriod: fullStoreResyncPeriod,
-		stop:                  make(chan struct{}),
+		nsStore: newNetworkSetStore(cluster, client),
+		canSync: false,
+		stop:    make(chan struct{}),
 	}
 
 	podWatcher := kube.NewPodWatcher(
@@ -56,26 +54,11 @@ func (r *Runner) Start() error {
 	return nil
 }
 
-func (r *Runner) Run() {
-	ticker := time.NewTicker(r.fullStoreResyncPeriod)
-	defer ticker.Stop()
-	for {
-		select {
-		case <-ticker.C:
-			r.nsStore.fullSyncQueue <- struct{}{}
-		case <-r.stop:
-			log.Logger.Debug("Stopping runner")
-			return
-		}
-	}
-}
-
 func (r *Runner) Healthy() bool {
 	return r.podWatcher.Healthy()
 }
 
 func (r *Runner) Stop() {
-	r.stop <- struct{}{}
 	r.nsStore.stop <- struct{}{}
 }
 

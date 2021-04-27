@@ -12,14 +12,12 @@ pod communication.
 
 ```
 Usage of ./semaphore-policy:
-  -full-store-resync-period duration
-        Frequency to perform a full network set store resync from cache to calico GlocalNetworkPolicies (default 1h0m0s)
   -local-kube-config string
         Path of the local kube cluster config file, if not provided the app will try to get in cluster config
   -log-level string
         Log level (default "info")
   -pod-resync-period duration
-        Pod watcher cache resync period (default 1h0m0s)
+        Pod watcher cache resync period. Disabled by default
   -remote-api-url string
         Remote Kubernetes API server URL
   -remote-ca-url string
