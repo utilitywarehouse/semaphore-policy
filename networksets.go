@@ -156,7 +156,7 @@ func (nss *NetworkSetStore) RunSyncLoop() {
 
 func (nss *NetworkSetStore) requeue(id string) {
 	log.Logger.Debug("Requeueing sync task", "id", id)
-	metrics.IncSyncRequeue(id)
+	metrics.IncSyncRequeue()
 	go func() {
 		time.Sleep(1)
 		nss.enqueue(id)
@@ -170,7 +170,7 @@ func (nss *NetworkSetStore) enqueue(id string) {
 		log.Logger.Debug("Sync task queued", "id", id)
 	case <-time.After(5 * time.Second):
 		log.Logger.Error("Timed out trying to queue a sync action for netset, run queue is full", "id", id)
-		metrics.IncSyncQueueFullFailures(id)
+		metrics.IncSyncQueueFullFailures()
 		nss.requeue(id)
 	}
 }
