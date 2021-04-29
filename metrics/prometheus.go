@@ -26,23 +26,31 @@ var (
 		},
 		[]string{"type"},
 	)
-	syncQueueFullFailures = prometheus.NewCounterVec(
+	syncQueueFullFailures = prometheus.NewCounter(
 		prometheus.CounterOpts{
 			Name: "semaphore_policy_sync_queue_full_failures",
 			Help: "Number of times a sync task was not added to the sync queue in time because the queue was full.",
 		},
-		[]string{"globalnetworkset"},
 	)
-	syncRequeue = prometheus.NewCounterVec(
+	syncRequeue = prometheus.NewCounter(
 		prometheus.CounterOpts{
 			Name: "semaphore_policy_sync_requeue",
 			Help: "Number of attempts to requeue a sync.",
 		},
-		[]string{"globalnetworkset"},
 	)
 )
 
 func init() {
+	// Retrieving a Counter from a CounterVec will initialize it with a 0 value if it
+	// doesn't already have a value. This ensures that all possible counters
+	// start with a 0 value.
+	for _, t := range []string{"get", "list", "create", "update", "patch", "watch", "delete"} {
+		podWatcherFailures.With(prometheus.Labels{"type": t})
+		for _, s := range []string{"0", "1"} {
+			calicoClientRequest.With(prometheus.Labels{"type": t, "success": s})
+		}
+	}
+
 	prometheus.MustRegister(calicoClientRequest)
 	prometheus.MustRegister(podWatcherFailures)
 	prometheus.MustRegister(syncQueueFullFailures)
@@ -66,14 +74,10 @@ func IncPodWatcherFailures(t string) {
 	}).Inc()
 }
 
-func IncSyncQueueFullFailures(globalnetworkset string) {
-	syncQueueFullFailures.With(prometheus.Labels{
-		"globalnetworkset": globalnetworkset,
-	}).Inc()
+func IncSyncQueueFullFailures() {
+	syncQueueFullFailures.Inc()
 }
 
-func IncSyncRequeue(globalnetworkset string) {
-	syncRequeue.With(prometheus.Labels{
-		"globalnetworkset": globalnetworkset,
-	}).Inc()
+func IncSyncRequeue() {
+	syncRequeue.Inc()
 }
