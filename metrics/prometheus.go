@@ -1,10 +1,3 @@
-// Package metrics contains global structures for capturing
-// semaphore-policy metrics. The following metrics are implemented:
-//
-//   - semaphore_policy_calico_client_request{"type", "success"}
-//   - semaphore_policy_pod_watcher_failures{"type"}
-//   - semaphore_policy_sync_queue_full_failures{"globalnetworkset"}
-//   - semaphore_policy_sync_requeue{"globalnetworkset"}
 package metrics
 
 import (
