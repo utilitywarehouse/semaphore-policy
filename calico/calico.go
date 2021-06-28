@@ -6,6 +6,7 @@ import (
 	"github.com/projectcalico/libcalico-go/lib/apiconfig"
 	v3 "github.com/projectcalico/libcalico-go/lib/apis/v3"
 	client "github.com/projectcalico/libcalico-go/lib/clientv3"
+	"github.com/projectcalico/libcalico-go/lib/errors"
 	calicoOptions "github.com/projectcalico/libcalico-go/lib/options"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -38,9 +39,8 @@ func newForConfig(kubeconfig string) (client.Interface, error) {
 func CreateOrUpdateGlobalNetworkSet(client client.Interface, name string, labels map[string]string, nets []string) error {
 	ctx := context.Background()
 	gns, err := client.GlobalNetworkSets().Get(ctx, name, calicoOptions.GetOptions{})
-	metrics.IncCalicoClientRequest("get", err)
-	if err != nil {
-		// If Get errors try to create a new globalnetworkset
+	if _, ok := err.(errors.ErrorResourceDoesNotExist); ok {
+		// Try creating if the resource does not exist
 		gns = &v3.GlobalNetworkSet{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:   name,
@@ -50,6 +50,10 @@ func CreateOrUpdateGlobalNetworkSet(client client.Interface, name string, labels
 		}
 		_, err := client.GlobalNetworkSets().Create(ctx, gns, calicoOptions.SetOptions{})
 		metrics.IncCalicoClientRequest("create", err)
+		return err
+	}
+	if err != nil {
+		metrics.IncCalicoClientRequest("get", err)
 		return err
 	}
 	// Else update the existing one
