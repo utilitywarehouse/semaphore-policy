@@ -6,6 +6,7 @@ import (
 	"github.com/projectcalico/libcalico-go/lib/apiconfig"
 	v3 "github.com/projectcalico/libcalico-go/lib/apis/v3"
 	client "github.com/projectcalico/libcalico-go/lib/clientv3"
+	"github.com/projectcalico/libcalico-go/lib/errors"
 	calicoOptions "github.com/projectcalico/libcalico-go/lib/options"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -38,9 +39,9 @@ func newForConfig(kubeconfig string) (client.Interface, error) {
 func CreateOrUpdateGlobalNetworkSet(client client.Interface, name string, labels map[string]string, nets []string) error {
 	ctx := context.Background()
 	gns, err := client.GlobalNetworkSets().Get(ctx, name, calicoOptions.GetOptions{})
-	metrics.IncCalicoClientRequest("get", err)
-	if err != nil {
-		// If Get errors try to create a new globalnetworkset
+	if _, ok := err.(errors.ErrorResourceDoesNotExist); ok {
+		metrics.IncCalicoClientRequest("get", nil) // Don't record an error since ErrorResourceDoesNotExist is expected at this point
+		// Try creating if the resource does not exist
 		gns = &v3.GlobalNetworkSet{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:   name,
@@ -52,6 +53,10 @@ func CreateOrUpdateGlobalNetworkSet(client client.Interface, name string, labels
 		metrics.IncCalicoClientRequest("create", err)
 		return err
 	}
+	metrics.IncCalicoClientRequest("get", err)
+	if err != nil {
+		return err
+	}
 	// Else update the existing one
 	gns.Labels = labels
 	gns.Spec.Nets = nets
@@ -60,15 +65,10 @@ func CreateOrUpdateGlobalNetworkSet(client client.Interface, name string, labels
 	return err
 }
 
-// DeleteGlobalNetworkSet will delete a GlobalNetworkSet if exists
+// DeleteGlobalNetworkSet will try to delete a GlobalNetworkSet
 func DeleteGlobalNetworkSet(client client.Interface, name string) error {
 	ctx := context.Background()
-	_, err := client.GlobalNetworkSets().Get(ctx, name, calicoOptions.GetOptions{})
-	metrics.IncCalicoClientRequest("get", err)
-	if err != nil {
-		return err
-	}
-	_, err = client.GlobalNetworkSets().Delete(ctx, name, calicoOptions.DeleteOptions{})
+	_, err := client.GlobalNetworkSets().Delete(ctx, name, calicoOptions.DeleteOptions{})
 	metrics.IncCalicoClientRequest("delete", err)
 	return err
 }
