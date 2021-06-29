@@ -40,6 +40,7 @@ func CreateOrUpdateGlobalNetworkSet(client client.Interface, name string, labels
 	ctx := context.Background()
 	gns, err := client.GlobalNetworkSets().Get(ctx, name, calicoOptions.GetOptions{})
 	if _, ok := err.(errors.ErrorResourceDoesNotExist); ok {
+		metrics.IncCalicoClientRequest("get", nil) // Don't record an error since ErrorResourceDoesNotExist is expected at this point
 		// Try creating if the resource does not exist
 		gns = &v3.GlobalNetworkSet{
 			ObjectMeta: metav1.ObjectMeta{
@@ -52,8 +53,8 @@ func CreateOrUpdateGlobalNetworkSet(client client.Interface, name string, labels
 		metrics.IncCalicoClientRequest("create", err)
 		return err
 	}
+	metrics.IncCalicoClientRequest("get", err)
 	if err != nil {
-		metrics.IncCalicoClientRequest("get", err)
 		return err
 	}
 	// Else update the existing one
@@ -64,15 +65,10 @@ func CreateOrUpdateGlobalNetworkSet(client client.Interface, name string, labels
 	return err
 }
 
-// DeleteGlobalNetworkSet will delete a GlobalNetworkSet if exists
+// DeleteGlobalNetworkSet will try to delete a GlobalNetworkSet
 func DeleteGlobalNetworkSet(client client.Interface, name string) error {
 	ctx := context.Background()
-	_, err := client.GlobalNetworkSets().Get(ctx, name, calicoOptions.GetOptions{})
-	metrics.IncCalicoClientRequest("get", err)
-	if err != nil {
-		return err
-	}
-	_, err = client.GlobalNetworkSets().Delete(ctx, name, calicoOptions.DeleteOptions{})
+	_, err := client.GlobalNetworkSets().Delete(ctx, name, calicoOptions.DeleteOptions{})
 	metrics.IncCalicoClientRequest("delete", err)
 	return err
 }
