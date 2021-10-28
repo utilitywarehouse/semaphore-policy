@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	calicoClient "github.com/projectcalico/libcalico-go/lib/clientv3"
+	calicoClientset "github.com/projectcalico/api/pkg/client/clientset_generated/clientset"
 
 	"github.com/utilitywarehouse/semaphore-policy/calico"
 	"github.com/utilitywarehouse/semaphore-policy/log"
@@ -21,7 +21,7 @@ type SyncObject struct {
 }
 
 type NetworkSetStore struct {
-	client        calicoClient.Interface
+	client        *calicoClientset.Clientset
 	syncQueue     chan SyncObject
 	fullSyncQueue chan struct{}
 	stop          chan struct{}
@@ -29,7 +29,7 @@ type NetworkSetStore struct {
 	cluster       string // the name of the cluster that contains targets of this set
 }
 
-func newNetworkSetStore(cluster string, client calicoClient.Interface) NetworkSetStore {
+func newNetworkSetStore(cluster string, client *calicoClientset.Clientset) NetworkSetStore {
 	return NetworkSetStore{
 		client:        client,
 		store:         make(map[string]*NetworkSet),

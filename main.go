@@ -77,7 +77,7 @@ func main() {
 		}
 	}
 
-	homeCalicoClient, err := calico.NewClient(*flagKubeConfigPath)
+	homeCalicoClient, err := calico.ClientFromConfig(*flagKubeConfigPath)
 	if err != nil {
 		log.Logger.Error(
 			"cannot create kube client for homecluster",

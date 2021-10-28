@@ -67,15 +67,15 @@ func Client(token, apiURL, caURL string) (*kubernetes.Clientset, error) {
 // ClientFromConfig returns a Kubernetes client (clientset) from the kubeconfig
 // path or from the in-cluster service account environment.
 func ClientFromConfig(path string) (*kubernetes.Clientset, error) {
-	conf, err := getClientConfig(path)
+	conf, err := GetClientConfig(path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get Kubernetes client config: %v", err)
 	}
 	return kubernetes.NewForConfig(conf)
 }
 
-// getClientConfig returns a Kubernetes client Config.
-func getClientConfig(path string) (*rest.Config, error) {
+// GetClientConfig returns a Kubernetes client Config.
+func GetClientConfig(path string) (*rest.Config, error) {
 	if path != "" {
 		// build Config from a kubeconfig filepath
 		return clientcmd.BuildConfigFromFlags("", path)

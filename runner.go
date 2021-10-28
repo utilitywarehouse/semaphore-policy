@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	calicoClient "github.com/projectcalico/libcalico-go/lib/clientv3"
+	calicoClientset "github.com/projectcalico/api/pkg/client/clientset_generated/clientset"
+
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
@@ -21,7 +22,7 @@ type Runner struct {
 	stop       chan struct{}
 }
 
-func newRunner(client calicoClient.Interface, watchClient kubernetes.Interface, cluster string, podResyncPeriod time.Duration) *Runner {
+func newRunner(client *calicoClientset.Clientset, watchClient kubernetes.Interface, cluster string, podResyncPeriod time.Duration) *Runner {
 	runner := &Runner{
 		nsStore: newNetworkSetStore(cluster, client),
 		canSync: false,
