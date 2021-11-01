@@ -10,6 +10,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/utilitywarehouse/semaphore-policy/kube"
+	"github.com/utilitywarehouse/semaphore-policy/log"
 	"github.com/utilitywarehouse/semaphore-policy/metrics"
 )
 
@@ -28,6 +29,7 @@ func CreateOrUpdateGlobalNetworkSet(client *clientset.Clientset, name string, la
 	ctx := context.Background()
 	gns, err := client.ProjectcalicoV3().GlobalNetworkSets().Get(ctx, name, metav1.GetOptions{})
 	if errors.IsNotFound(err) {
+		log.Logger.Debug("GlobalNetworkSet not found error returned from apu", "set", name)
 		metrics.IncCalicoClientRequest("get", nil) // Don't record an error since ErrorResourceDoesNotExist is expected at this point
 		// Try creating if the resource does not exist
 		gns = &v3.GlobalNetworkSet{
