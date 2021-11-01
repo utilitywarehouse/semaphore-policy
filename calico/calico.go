@@ -6,7 +6,7 @@ import (
 
 	v3 "github.com/projectcalico/api/pkg/apis/projectcalico/v3"
 	"github.com/projectcalico/api/pkg/client/clientset_generated/clientset"
-	"github.com/projectcalico/libcalico-go/lib/errors"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/utilitywarehouse/semaphore-policy/kube"
@@ -27,7 +27,7 @@ func ClientFromConfig(path string) (*clientset.Clientset, error) {
 func CreateOrUpdateGlobalNetworkSet(client *clientset.Clientset, name string, labels map[string]string, nets []string) error {
 	ctx := context.Background()
 	gns, err := client.ProjectcalicoV3().GlobalNetworkSets().Get(ctx, name, metav1.GetOptions{})
-	if _, ok := err.(errors.ErrorResourceDoesNotExist); ok {
+	if errors.IsNotFound(err) {
 		metrics.IncCalicoClientRequest("get", nil) // Don't record an error since ErrorResourceDoesNotExist is expected at this point
 		// Try creating if the resource does not exist
 		gns = &v3.GlobalNetworkSet{
