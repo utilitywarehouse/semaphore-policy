@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	calicoClient "github.com/projectcalico/libcalico-go/lib/clientv3"
+	calicoClientset "github.com/projectcalico/api/pkg/client/clientset_generated/clientset"
 
 	"github.com/utilitywarehouse/semaphore-policy/calico"
 	"github.com/utilitywarehouse/semaphore-policy/log"
@@ -21,7 +21,7 @@ type SyncObject struct {
 }
 
 type NetworkSetStore struct {
-	client        calicoClient.Interface
+	client        *calicoClientset.Clientset
 	syncQueue     chan SyncObject
 	fullSyncQueue chan struct{}
 	stop          chan struct{}
@@ -29,7 +29,7 @@ type NetworkSetStore struct {
 	cluster       string // the name of the cluster that contains targets of this set
 }
 
-func newNetworkSetStore(cluster string, client calicoClient.Interface) NetworkSetStore {
+func newNetworkSetStore(cluster string, client *calicoClientset.Clientset) NetworkSetStore {
 	return NetworkSetStore{
 		client:        client,
 		store:         make(map[string]*NetworkSet),
@@ -119,7 +119,7 @@ func (nss *NetworkSetStore) RunSyncLoop() {
 		select {
 		case o := <-nss.syncQueue:
 			if err := nss.syncToCalico(o.id); err != nil {
-				log.Logger.Error("failed to sync netset to calico GlobalNetworkSets", "id", o.id)
+				log.Logger.Error("failed to sync netset to calico GlobalNetworkSets", "id", o.id, "error", err)
 				nss.requeue(o.id)
 			}
 		case <-nss.fullSyncQueue:
@@ -129,7 +129,7 @@ func (nss *NetworkSetStore) RunSyncLoop() {
 				labelNetSetCluster: nss.cluster,
 			})
 			if err != nil {
-				log.Logger.Error("failed get the list of existing network sets, potential stale set left behind!", "cluster", nss.cluster)
+				log.Logger.Error("failed get the list of existing network sets, potential stale set left behind!", "cluster", nss.cluster, "error", err)
 			}
 			for _, n := range currentNetSets {
 				// if network set is not in the store, trigger a sync that will delete it from kube resources as well.
