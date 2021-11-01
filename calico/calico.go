@@ -29,7 +29,7 @@ func CreateOrUpdateGlobalNetworkSet(client *clientset.Clientset, name string, la
 	ctx := context.Background()
 	gns, err := client.ProjectcalicoV3().GlobalNetworkSets().Get(ctx, name, metav1.GetOptions{})
 	if errors.IsNotFound(err) {
-		log.Logger.Debug("GlobalNetworkSet not found error returned from apu", "set", name)
+		log.Logger.Debug("GlobalNetworkSet NotFound error returned from apiserver", "set", name)
 		metrics.IncCalicoClientRequest("get", nil) // Don't record an error since ErrorResourceDoesNotExist is expected at this point
 		// Try creating if the resource does not exist
 		gns = &v3.GlobalNetworkSet{
