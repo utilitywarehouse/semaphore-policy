@@ -3,7 +3,7 @@ module github.com/utilitywarehouse/semaphore-policy
 go 1.17
 
 require (
-	github.com/hashicorp/go-hclog v1.0.0
+	github.com/hashicorp/go-hclog v1.2.0
 	github.com/projectcalico/api v0.0.0-20211027233830-6b11a0f525e1
 	github.com/prometheus/client_golang v1.11.0
 	github.com/stretchr/testify v1.7.0
