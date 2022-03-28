@@ -6,7 +6,7 @@ require (
 	github.com/hashicorp/go-hclog v1.2.0
 	github.com/projectcalico/api v0.0.0-20220129171754-5c0717447274
 	github.com/prometheus/client_golang v1.12.1
-	github.com/stretchr/testify v1.7.0
+	github.com/stretchr/testify v1.7.1
 	k8s.io/api v0.24.0-alpha.4
 	k8s.io/apimachinery v0.24.0-alpha.4
 	k8s.io/client-go v0.24.0-alpha.4
