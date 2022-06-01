@@ -7,8 +7,8 @@ require (
 	github.com/projectcalico/api v0.0.0-20220129171754-5c0717447274
 	github.com/prometheus/client_golang v1.12.2
 	github.com/stretchr/testify v1.7.1
-	k8s.io/api v0.24.0-alpha.4
-	k8s.io/apimachinery v0.24.0-alpha.4
+	k8s.io/api v0.25.0-alpha.0
+	k8s.io/apimachinery v0.25.0-alpha.0
 	k8s.io/client-go v0.24.0-alpha.4
 )
 
@@ -47,7 +47,7 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	k8s.io/klog/v2 v2.60.1 // indirect
-	k8s.io/kube-openapi v0.0.0-20220326042323-e69a86c08c48 // indirect
+	k8s.io/kube-openapi v0.0.0-20220328201542-3ee0da9b0b42 // indirect
 	k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9 // indirect
 	sigs.k8s.io/json v0.0.0-20211208200746-9f7c6b3444d2 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.1 // indirect
