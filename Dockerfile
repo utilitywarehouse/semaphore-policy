@@ -1,4 +1,4 @@
-FROM golang:1.18-alpine AS build
+FROM golang:1.20-alpine AS build
 WORKDIR /go/src/github.com/utilitywarehouse/semaphore-policy
 COPY . /go/src/github.com/utilitywarehouse/semaphore-policy
 ENV CGO_ENABLED=0
@@ -9,6 +9,6 @@ RUN \
     && go build -ldflags='-s -w' -o /semaphore-policy . \
     && upx /semaphore-policy
 
-FROM alpine:3.15
+FROM alpine:3.17
 COPY --from=build /semaphore-policy /semaphore-policy
 ENTRYPOINT [ "/semaphore-policy" ]
