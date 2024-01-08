@@ -9,6 +9,6 @@ RUN \
     && go build -ldflags='-s -w' -o /semaphore-policy . \
     && upx /semaphore-policy
 
-FROM alpine:3.18
+FROM alpine:3.19
 COPY --from=build /semaphore-policy /semaphore-policy
 ENTRYPOINT [ "/semaphore-policy" ]
