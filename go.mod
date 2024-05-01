@@ -4,7 +4,7 @@ go 1.21
 toolchain go1.22.2
 
 require (
-	github.com/hashicorp/go-hclog v1.6.2
+	github.com/hashicorp/go-hclog v1.6.3
 	github.com/projectcalico/api v0.0.0-20231218190037-9183ab93f33e
 	github.com/prometheus/client_golang v1.19.0
 	github.com/stretchr/testify v1.9.0
