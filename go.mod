@@ -7,7 +7,7 @@ toolchain go1.22.4
 require (
 	github.com/hashicorp/go-hclog v1.6.3
 	github.com/projectcalico/api v0.0.0-20240708202104-e3f70b269c2c
-	github.com/prometheus/client_golang v1.19.1
+	github.com/prometheus/client_golang v1.20.2
 	github.com/stretchr/testify v1.9.0
 	k8s.io/api v0.31.0
 	k8s.io/apimachinery v0.31.0
@@ -34,6 +34,7 @@ require (
 	github.com/imdario/mergo v0.3.16 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
+	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
