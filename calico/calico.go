@@ -59,6 +59,11 @@ func CreateOrUpdateGlobalNetworkSet(client *clientset.Clientset, name string, la
 func DeleteGlobalNetworkSet(client *clientset.Clientset, name string) error {
 	ctx := context.Background()
 	err := client.ProjectcalicoV3().GlobalNetworkSets().Delete(ctx, name, metav1.DeleteOptions{})
+	if errors.IsNotFound(err) {
+		log.Logger.Warn("Apiserver returned a NotFound error on GlobalNetworkSet deletion request, skipping deletion op", "name", name)
+		metrics.IncCalicoClientRequest("delete", nil)
+		return nil
+	}
 	metrics.IncCalicoClientRequest("delete", err)
 	return err
 }
