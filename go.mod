@@ -9,8 +9,8 @@ require (
 	github.com/projectcalico/api v0.0.0-20241106234619-d6b63b533e68
 	github.com/prometheus/client_golang v1.22.0
 	github.com/stretchr/testify v1.10.0
-	k8s.io/api v0.33.1
-	k8s.io/apimachinery v0.33.1
+	k8s.io/api v0.33.2
+	k8s.io/apimachinery v0.33.2
 	k8s.io/client-go v0.33.1
 )
 
