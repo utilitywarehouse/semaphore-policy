@@ -1,6 +1,6 @@
 module github.com/utilitywarehouse/semaphore-policy
 
-go 1.26.0
+go 1.26.5
 
 require (
 	github.com/hashicorp/go-hclog v1.6.3
