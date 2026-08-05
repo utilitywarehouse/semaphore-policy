@@ -11,13 +11,3 @@ updates:
       all:
         patterns:
           - "*"
-
-  # Maintain dependencies for Go modules
-  - package-ecosystem: "gomod"
-    directory: "/"
-    schedule:
-      interval: "monthly"
-    groups:
-      all:
-        patterns:
-          - "*"
