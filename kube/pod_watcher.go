@@ -3,6 +3,7 @@ package kube
 import (
 	"context"
 	"fmt"
+	"sync/atomic"
 	"time"
 
 	v1 "k8s.io/api/core/v1"
@@ -29,8 +30,7 @@ type PodWatcher struct {
 	controller    cache.Controller
 	eventHandler  PodEventHandler
 	labelSelector string
-	ListHealthy   bool
-	WatchHealthy  bool
+	watchHealthy  atomic.Bool
 }
 
 // NewPodWatcher returns a new pod wathcer.
@@ -53,10 +53,7 @@ func (pw *PodWatcher) Init() {
 			l, err := pw.client.CoreV1().Pods(metav1.NamespaceAll).List(pw.ctx, options)
 			if err != nil {
 				log.Logger.Error("pw: list error", "err", err)
-				pw.ListHealthy = false
 				metrics.IncPodWatcherFailures("list")
-			} else {
-				pw.ListHealthy = true
 			}
 			return l, err
 		},
@@ -65,10 +62,10 @@ func (pw *PodWatcher) Init() {
 			w, err := pw.client.CoreV1().Pods(metav1.NamespaceAll).Watch(pw.ctx, options)
 			if err != nil {
 				log.Logger.Error("pw: watch error", "err", err)
-				pw.WatchHealthy = false
+				pw.watchHealthy.Store(false)
 				metrics.IncPodWatcherFailures("watch")
 			} else {
-				pw.WatchHealthy = true
+				pw.watchHealthy.Store(true)
 			}
 			return w, err
 		},
@@ -120,10 +117,10 @@ func (pw *PodWatcher) List() ([]*v1.Pod, error) {
 	return svcs, nil
 }
 
-// Healthy is true when both list and watch handlers are running without errors.
+// Healthy is true when the pod cache has synced and the watch is running
+// without errors. Sync state comes from the controller rather than from the
+// list handler, since client-go (>= v0.35) populates the cache with a streaming
+// watch and does not call the list handler at all.
 func (pw *PodWatcher) Healthy() bool {
-	if pw.ListHealthy && pw.WatchHealthy {
-		return true
-	}
-	return false
+	return pw.controller.HasSynced() && pw.watchHealthy.Load()
 }
